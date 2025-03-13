@@ -6,6 +6,9 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = []
 
+[tool.ruff]
+line-length = 100
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

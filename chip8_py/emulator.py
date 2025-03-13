@@ -3,7 +3,7 @@ import random
 from time import sleep
 
 
-#fmt: off
+# fmt: off
 FONTS = [
     0xF0, 0x90, 0x90, 0x90, 0xF0,  # 0
     0x20, 0x60, 0x20, 0x20, 0x70,  # 1
@@ -24,6 +24,7 @@ FONTS = [
 ]
 # fmt: on
 
+
 class Emulator:
     def __init__(self):
         self.memory = bytearray(4096)
@@ -31,7 +32,7 @@ class Emulator:
 
         self.registers = bytearray(16)
         self.stack = array.array("H", [0] * 16)  # 16-bit stack (unsigned short)
-        
+
         self.index_register = 0
         self.program_counter = 0x200
         self.stack_pointer = 0
@@ -47,14 +48,14 @@ class Emulator:
         while True:
             self.step()
             sleep(1 / 60)
-    
+
     def step(self) -> None:
         """
         Execute the next instruction in memory.
 
         Each instruction is 2 bytes long and is stored in big-endian format.
         The following variables are used in the instructions:
-        
+
         1. nnn or addr - A 12-bit value, the lowest 12 bits of the instruction
         2. n or nibble - A 4-bit value, the lowest 4 bits of the instruction
         3. x - A 4-bit value, the lower 4 bits of the high byte of the instruction
@@ -72,7 +73,7 @@ class Emulator:
         n4 = b2 & 0xF
 
         # Execute instruction. See http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
-        match(n1, n2, n3, n4):
+        match (n1, n2, n3, n4):
             case (0, 0, 0xE, 0):
                 # Clear the screen
                 ...
@@ -82,7 +83,7 @@ class Emulator:
                 self.stack_pointer -= 1
             case (1, _, _, _):
                 # Jump to address nnn
-                self.program_counter = (n2 << 8 | b2)
+                self.program_counter = n2 << 8 | b2
             case (2, _, _, _):
                 # Call subroutine at nnn - put counter on stack, then jump to nnn
                 self.stack_pointer += 1
@@ -181,7 +182,7 @@ class Emulator:
                 self.sound_timer = self.registers[n2]
             case (0xF, _, 1, 0xE):
                 # Set I = I + Vx
-                index_register += self.registers[n2]
+                self.index_register += self.registers[n2]
             case (0xF, _, 2, 9):
                 # Set I = location of sprite for digit Vx
                 ...
@@ -192,9 +193,13 @@ class Emulator:
                 self.memory[self.index_register + 2] = self.registers[n2] % 10  # Ones digit
             case (0xF, _, 5, 5):
                 # Store registers V0 through Vx into memory starting at location I
-                self.memory[self.index_register : self.index_register + n2 + 1] = self.registers[:n2 + 1]
+                self.memory[self.index_register : self.index_register + n2 + 1] = self.registers[
+                    : n2 + 1
+                ]
             case (0xF, _, 6, 5):
                 # Read into registers V0 through Vx from memory starting at location I
-                self.registers[:n2 + 1] = self.memory[self.index_register : self.index_register + n2 + 1]
+                self.registers[: n2 + 1] = self.memory[
+                    self.index_register : self.index_register + n2 + 1
+                ]
             case _:
                 raise NotImplementedError("Unknown instruction")
