@@ -63,7 +63,7 @@ class Emulator:
         5. kk or byte - An 8-bit value, the lowest 8 bits of the instruction
         """
         # All instructions are 2 bytes long, most-significant byte first
-        b1, b2 = self.memory[self.program_counter : self.program_counter + 1]
+        b1, b2 = self.memory[self.program_counter : self.program_counter + 2]
         self.program_counter += 2
 
         # Split into 4-bit nibbles for easier processing
@@ -77,10 +77,31 @@ class Emulator:
             case (0, 0, 0xE, 0):
                 # Clear the screen
                 ...
+            case (0, 0, 0XC, _):
+                # TODO: Super inst: SCD nibble
+                ...
             case (0, 0, 0xE, 0xE):
                 # Return from subroutine - set program counter to the address at the top of the stack
                 self.program_counter = self.stack[self.stack_pointer]
                 self.stack_pointer -= 1
+            case (0, 0, 0xF, 0xB):
+                # TODO: Super inst: SCR
+                ...
+            case (0, 0, 0xF, 0xC):
+                # TODO: Super inst: SCL
+                ...
+            case (0, 0, 0xF, 0xD):
+                # TODO: Super inst: EXIT
+                ...
+            case (0, 0, 0xF, 0xE):
+                # TODO: Super inst: LOW
+                ...
+            case (0, 0, 0xF, 0xF):
+                # TODO: Super inst: HIGH
+                ...
+            case (0, _, _, _):
+                # TODO: Standard inst: SYS addr
+                ...
             case (1, _, _, _):
                 # Jump to address nnn
                 self.program_counter = n2 << 8 | b2
@@ -152,8 +173,11 @@ class Emulator:
             case (0xC, _, _, _):
                 # Set Vx = random byte AND kk
                 self.registers[n2] = random.randint(0, 255) & b2
+            case (0xD, _, _, 0):
+                # TODO: Super inst: DRW Vx, Vy, 0
+                ...
             case (0xD, _, _, _):
-                # Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision
+                # TODO: Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision
                 # Sprites are XORed onto the existing screen -- if any pixels are erased, VF is set to 1, else 0
                 # Display wraps around the screen if the sprite exceeds the screen dimensions
                 ...
@@ -171,7 +195,7 @@ class Emulator:
                 # Set Vx = delay timer value
                 self.registers[n2] = self.delay_timer
             case (0xF, _, 0, 0xA):
-                # Wait for a key press, store the value of the key in Vx
+                # TODO: Wait for a key press, store the value of the key in Vx
                 key = ...
                 self.registers[n2] = key
             case (0xF, _, 1, 5):
@@ -185,6 +209,9 @@ class Emulator:
                 self.index_register += self.registers[n2]
             case (0xF, _, 2, 9):
                 # Set I = location of sprite for digit Vx
+                ...
+            case (0xF, _, 3, 0):
+                # TODO: Super inst: LD HF, Vx
                 ...
             case (0xF, _, 3, 3):
                 # Store BCD representation of Vx in memory locations I, I+1, and I+2
@@ -201,5 +228,11 @@ class Emulator:
                 self.registers[: n2 + 1] = self.memory[
                     self.index_register : self.index_register + n2 + 1
                 ]
+            case (0xF, _, 7, 5):
+                # TODO: Super inst: LD R, Vx
+                ...
+            case (0xF, _, 8, 5):
+                # TODO: Super inst: LD Vx, R
+                ...
             case _:
-                raise NotImplementedError("Unknown instruction")
+                raise NotImplementedError(f"Unknown instruction set: [0x{n1:01X}, 0x{n2:01X}, 0x{n3:01X}, 0x{n4:01X}]")
